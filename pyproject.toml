@@ -1,0 +1,26 @@
+[project]
+name = "schoolside"
+version = "0.1.0"
+description = "Schoolside — nieoficjalny klient dla LIBRUS Synergia na macOS"
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["librus-synergia>=0.3.19,<0.4"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1", "mypy>=1.15,<2"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
