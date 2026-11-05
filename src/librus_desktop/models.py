@@ -26,6 +26,10 @@ class SchoolItem:
     category: str | None = None
     subject_id: str | None = None
     has_attachments: bool | None = None
+    grade_points: float | None = None
+    grade_max_points: float | None = None
+    grade_weight: float | None = None
+    counts_to_average: bool | None = None
 
 
 @dataclass

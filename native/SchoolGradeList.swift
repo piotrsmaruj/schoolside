@@ -19,10 +19,55 @@ struct SchoolGradeCategoryOption: Identifiable, Equatable {
     let title: String
 }
 
+/// Point-grade result: 100 * sum(points * weight) / sum(maximum * weight).
+struct SchoolGradeAverage {
+    let percentage: Double?
+    let count: Int
+
+    init(items: [SchoolItem]) {
+        let values = items.compactMap(Self.contribution)
+        count = values.count
+        let earned = values.reduce(0) { $0 + $1.earned }
+        let possible = values.reduce(0) { $0 + $1.possible }
+        guard earned.isFinite, possible.isFinite, possible > 0 else {
+            percentage = nil
+            return
+        }
+        let result = (earned / possible) * 100
+        percentage = result.isFinite ? result : nil
+    }
+
+    private static func contribution(_ item: SchoolItem) -> (earned: Double, possible: Double)? {
+        guard item.countsToAverage == true,
+              let points = item.gradePoints, points.isFinite, points >= 0,
+              let maximum = item.gradeMaxPoints, maximum.isFinite, maximum > 0,
+              let weight = item.gradeWeight, weight.isFinite, weight > 0 else { return nil }
+        let earned = points * weight
+        let possible = maximum * weight
+        guard earned.isFinite, possible.isFinite, possible > 0 else { return nil }
+        return (earned, possible)
+    }
+
+    var displayValue: String {
+        guard let percentage else { return "—" }
+        return percentage.formatted(.number.locale(Locale(identifier: "pl_PL"))
+            .precision(.fractionLength(2)).rounded(rule: .toNearestOrAwayFromZero)) + "%"
+    }
+
+    var explanation: String {
+        guard percentage != nil else {
+            return "Brak ocen procentowych z danymi do obliczenia średniej. Odśwież dane, jeśli pochodzą ze starszej wersji."
+        }
+        return "100 × suma(punkty × waga) / suma(maksymalne punkty × waga), z widocznych ocen tego przedmiotu. "
+            + "Uwzględnione oceny: \(count). Pomijamy oceny wyłączone ze średniej w Librusie oraz wpisy bez pełnych danych."
+    }
+}
+
 struct SchoolGradeSubject: Identifiable {
     let id: String
     let title: String
     let items: [SchoolItem]
+    var average: SchoolGradeAverage { SchoolGradeAverage(items: items) }
 }
 
 /// Filtering never guesses missing metadata; picker options describe the full source.

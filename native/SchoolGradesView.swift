@@ -2,7 +2,7 @@ import SwiftUI
 
 @MainActor
 private final class SchoolGradeBrowser: ObservableObject {
-    @Published var mode: SchoolGradeMode = .recent
+    @Published var mode: SchoolGradeMode = .subjects
     @Published var semester: SchoolGradeSemester = .all
     @Published var category: SchoolGradeCategory = .all
     @Published var expandedSubjects: Set<String> = []
@@ -93,6 +93,12 @@ struct SchoolGradesView: View {
         SchoolRecordRow(item: grade, showDate: true) { model.openItem(grade, in: .grades) }
     }
 
+    private func averageLabel(_ average: SchoolGradeAverage) -> some View {
+        Text("Średnia procentowa: \(average.displayValue)")
+            .font(.callout).fontWeight(.medium).monospacedDigit()
+            .foregroundStyle(SchoolPalette.accent).help(average.explanation)
+    }
+
     private func subjectGroup(_ subject: SchoolGradeSubject) -> some View {
         let expanded = browser.expandedSubjects.contains(subject.id)
         return VStack(alignment: .leading, spacing: appearance.density.rowSpacing) {
@@ -104,6 +110,7 @@ struct SchoolGradesView: View {
                         Text(subject.title).font(.headline)
                         Text("Liczba ocen: \(subject.items.count)")
                             .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                        averageLabel(subject.average)
                     }
                     Spacer()
                     if let latest = subject.items.first {
@@ -115,7 +122,7 @@ struct SchoolGradesView: View {
                     }
                 }.padding(appearance.density.rowPadding).contentShape(Rectangle())
             }.buttonStyle(.plain)
-                .accessibilityLabel("\(subject.title), liczba ocen: \(subject.items.count)")
+                .accessibilityLabel("\(subject.title), liczba ocen: \(subject.items.count), średnia procentowa: \(subject.average.displayValue)")
                 .accessibilityValue(expanded ? "Historia rozwinięta" : "Historia zwinięta")
                 .accessibilityHint("Rozwiń lub zwiń historię ocen przedmiotu")
             if expanded {

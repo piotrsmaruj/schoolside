@@ -21,6 +21,8 @@ lokalny moduł Python przez nieoficjalną bibliotekę `librus-synergia`.
   Nagłówki dni pozostają widoczne przy przewijaniu.
 - Oceny standardowe oraz punktowe/procentowe: procent i zdobyte/maksymalne punkty.
   Widoki Ostatnie/Przedmioty, rozwijana historia i filtry semestru/rodzaju pracy.
+  Średnia procentowa przy każdym przedmiocie, zgodna z filtrami.
+  Domyślnie otwiera się widok Przedmioty ze średnimi.
   Przy nieznanym maksimum pokazujemy punkty, bez zgadywania procentu.
 - 50 ostatnich wiadomości: lista obok pełnej treści, filtry Wszystkie/Nieprzeczytane/
   Z załącznikami, pobieranie plików. Pełna treść pobierana wyłącznie po kliknięciu.
@@ -73,6 +75,16 @@ Motyw i gęstość list wybierzesz w Ustawieniach w lewym panelu.
 Semestr i rodzaj pracy pochodzą z danych Librusa. Starsze wpisy bez metadanych
 pozostają dostępne pod filtrem „Brak semestru”/„Brak rodzaju”; następne poprawne
 pobranie uzupełnia metadane. Brak kategorii nie blokuje pobierania samych ocen.
+Średnia procentowa przedmiotu uwzględnia punkty, maksymalne punkty oraz wagę kategorii:
+`100 × suma(punkty × waga) / suma(maksymalne punkty × waga)`.
+To sposób liczenia z biblioteki `librus-synergia`, na pełnych danych punktowych;
+zaokrąglamy dopiero wynik, do dwóch miejsc po przecinku, z połówkami w górę
+(np. 47,625 → 47,63). Przy braku wagi przyjmujemy 1.
+Pomijamy oceny wyłączone ze średniej w Librusie, oceny standardowe (np. 1–6)
+i wpisy bez poprawnej liczby punktów lub maksimum oraz z niepoprawną lub zerową wagą.
+Brak danych oznaczamy „—”. Filtry zmieniają zestaw ocen uwzględnionych w wyniku.
+Po aktualizacji odśwież dane, żeby uzupełnić informacje potrzebne do średniej
+w starszym cache. Najazd na średnią pokazuje liczbę uwzględnionych ocen.
 Sam wybór zakładki lub filtra wiadomości nie oznacza ich jako przeczytane.
 Przy szybkim przełączaniu poprzednie pobieranie jest anulowane. Już otwarte
 wiadomości są ponownie wyświetlane z pamięci bieżącej sesji aplikacji.

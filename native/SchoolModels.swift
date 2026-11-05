@@ -21,11 +21,19 @@ struct SchoolItem: Codable, Identifiable, Equatable, Sendable {
     var category: String?
     var subjectId: String?
     var hasAttachments: Bool?
+    var gradePoints: Double?
+    var gradeMaxPoints: Double?
+    var gradeWeight: Double?
+    var countsToAverage: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id, title, subtitle, body, date, time, value, unread, canceled, mailbox, attachments, semester, category
         case subjectId = "subject_id"
         case hasAttachments = "has_attachments"
+        case gradePoints = "grade_points"
+        case gradeMaxPoints = "grade_max_points"
+        case gradeWeight = "grade_weight"
+        case countsToAverage = "counts_to_average"
     }
 }
 

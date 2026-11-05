@@ -49,12 +49,29 @@ def number(value: float) -> str:
     return f"{value:g}".replace(".", ",")
 
 
+def point_grade_percentage(grade: PointGradeData) -> float | None:
+    """Validate point data before displaying a percentage; never infer it from text."""
+    points, maximum = grade.points, grade.max_points
+    if (
+        points is None
+        or maximum is None
+        or not math.isfinite(points)
+        or not math.isfinite(maximum)
+        or points < 0
+        or maximum <= 0
+    ):
+        return None
+    percentage = (points / maximum) * 100
+    return percentage if math.isfinite(percentage) else None
+
+
 def point_grade_item(grade: PointGradeData, subjects: dict[int | str, str]) -> SchoolItem:
     points, maximum = grade.points, grade.max_points
+    percentage = point_grade_percentage(grade)
+    weight = grade.weight if grade.weight is not None else 1.0
     valid_points = points is not None and math.isfinite(points)
-    valid_maximum = maximum is not None and math.isfinite(maximum) and maximum > 0
-    if valid_points and valid_maximum and points is not None and maximum is not None:
-        value = f"{number(round(100 * points / maximum, 1))}%"
+    if percentage is not None and points is not None and maximum is not None:
+        value = f"{number(round(percentage, 1))}%"
         result = f"{number(points)} / {number(maximum)} pkt"
     elif valid_points and points is not None:
         value, result = f"{number(points)} pkt", "Nie podano maksymalnej liczby punktów"
@@ -69,6 +86,10 @@ def point_grade_item(grade: PointGradeData, subjects: dict[int | str, str]) -> S
         semester=grade.semester,
         category=grade.category,
         subject_id=str(grade.subject_id) if grade.subject_id is not None else None,
+        grade_points=points if percentage is not None else None,
+        grade_max_points=maximum if percentage is not None else None,
+        grade_weight=weight if math.isfinite(weight) else None,
+        counts_to_average=grade.counts_to_average,
     )
 
 

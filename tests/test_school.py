@@ -2,10 +2,12 @@ import asyncio
 import json
 import subprocess
 import sys
+from dataclasses import asdict, replace
 from datetime import date
 from pathlib import Path
 from typing import Any
 
+import pytest
 from librus_synergia.models import GradeCategoryData, GradeData, MeData, MessageData, PointGradeData
 
 from librus_desktop.mapping import plain_text, point_grade_item, standard_grade_item
@@ -39,6 +41,62 @@ def test_point_grade_preserves_browsing_metadata() -> None:
     item = point_grade_item(point_grade(25, 30), {2: "Matematyka"})
     assert (item.semester, item.category, item.subject_id) == (1, "Sprawdzian", "2")
     assert item.subtitle == "Sprawdzian · 25 / 30 pkt"
+
+
+def test_point_average_keeps_raw_points_weights_and_eligibility() -> None:
+    grade = point_grade(25, 30)
+    item = asdict(point_grade_item(grade, {}))
+    assert item.get("grade_points") == 25
+    assert item.get("grade_max_points") == 30
+    assert item.get("grade_weight") == 1
+    assert item.get("counts_to_average") is True
+    excluded = asdict(point_grade_item(replace(grade, counts_to_average=False), {}))
+    assert excluded.get("counts_to_average") is False
+
+
+@pytest.mark.parametrize(("weight", "expected"), [(None, 1), (0.5, 0.5), (3, 3), (0, 0)])
+def test_point_average_preserves_fractional_and_zero_weights(
+    weight: float | None, expected: float
+) -> None:
+    item = asdict(point_grade_item(replace(point_grade(25, 30), weight=weight), {}))
+    assert item.get("grade_weight") == expected
+
+
+@pytest.mark.parametrize("weight", [float("nan"), float("inf"), -float("inf")])
+def test_invalid_weight_does_not_break_json_transport(weight: float) -> None:
+    item = asdict(point_grade_item(replace(point_grade(25, 30), weight=weight), {}))
+    assert item.get("grade_weight") is None
+    json.dumps(item, allow_nan=False)
+
+
+@pytest.mark.parametrize(
+    ("points", "maximum"),
+    [
+        (None, 20),
+        (10, None),
+        (10, 0),
+        (10, -1),
+        (-1, 20),
+        (float("nan"), 20),
+        (10, float("inf")),
+        (float("inf"), 20),
+        (1e308, 1e-308),
+    ],
+)
+def test_invalid_points_cannot_contribute_to_percentage_average(
+    points: float | None, maximum: float | None
+) -> None:
+    item = asdict(point_grade_item(point_grade(points, maximum, "80%"), {}))
+    assert item.get("grade_points") is None
+    assert item.get("grade_max_points") is None
+    json.dumps(item, allow_nan=False)
+
+
+def test_standard_grades_cannot_be_mixed_into_percentage_average() -> None:
+    grade = GradeData(7, "5", 3, 2, 2, "2026-02-03", False, False)
+    item = asdict(standard_grade_item(grade, {}, {}))
+    assert item.get("grade_points") is None
+    assert item.get("grade_max_points") is None
 
 
 def test_standard_grade_resolves_category_and_keeps_comments() -> None:
