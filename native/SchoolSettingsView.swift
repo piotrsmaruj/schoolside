@@ -35,7 +35,7 @@ struct SchoolSettingsView: View {
                 Button("Wyloguj i usuń dane", role: .destructive) { model.logout(); dismiss() }
                 Button("Anuluj", role: .cancel) { }
             } message: {
-                Text("Hasło, sesja i zapisane dane Librusa zostaną usunięte z tego Maca. Pobrane załączniki pozostaną.")
+                Text("Hasło, sesja, dane Librusa i zadania organizera zostaną usunięte z tego Maca. Przypomnienia zostaną odwołane. Pobrane załączniki pozostaną.")
             }
     }
 
@@ -55,7 +55,7 @@ struct SchoolSettingsView: View {
     private var accountSettings: some View {
         Section("Konto i dane") {
             if let name = model.snapshot?.studentName { LabeledContent("Uczeń", value: name) }
-            Text("Dane offline i oznaczenia nowości są szyfrowane na tym Macu.")
+            Text("Dane offline, oznaczenia nowości i organizer są szyfrowane na tym Macu.")
                 .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
             Button("Wyloguj i usuń lokalne dane", role: .destructive) { state.confirmLogout = true }
         }

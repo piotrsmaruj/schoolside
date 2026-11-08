@@ -14,6 +14,15 @@ TARGETS = {
     "AppearanceTests": ["SchoolAppearance.swift"],
     "PaletteTests": ["SchoolPalette.swift"],
     "GradeListTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolGradeList.swift"],
+    "OrganizerTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolWeekOverview.swift"],
+    "OrganizerModelTests": [
+        "ProbeModels.swift",
+        "SchoolModels.swift",
+        "SecureVault.swift",
+        "SchoolBackend.swift",
+        "SchoolNotifications.swift",
+        "SchoolViewModel.swift",
+    ],
     "MessageListTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolMessageList.swift"],
     "TimetablePresentationTests": [
         "ProbeModels.swift",
@@ -62,9 +71,13 @@ def main() -> None:
     for name, sources in TARGETS.items():
         sources = ["AppIdentity.swift", *sources]
         if "SchoolModels.swift" in sources:
-            for dependency in ["SchoolDates.swift", "SchoolNews.swift"]:
+            for dependency in ["SchoolDates.swift", "SchoolNews.swift", "SchoolOrganizer.swift"]:
                 if dependency not in sources:
                     sources.append(dependency)
+        if "SchoolNotifications.swift" in sources:
+            sources.append("SchoolTaskReminders.swift")
+        if "SchoolViewModel.swift" in sources:
+            sources.append("SchoolOrganizerActions.swift")
         executable = BUILD / name
         subprocess.run(
             [

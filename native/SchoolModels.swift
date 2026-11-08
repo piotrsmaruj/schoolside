@@ -25,6 +25,7 @@ struct SchoolItem: Codable, Identifiable, Equatable, Sendable {
     var gradeMaxPoints: Double?
     var gradeWeight: Double?
     var countsToAverage: Bool?
+    var homeworkDueDate: String?
 
     enum CodingKeys: String, CodingKey {
         case id, title, subtitle, body, date, time, value, unread, canceled, mailbox, attachments, semester, category
@@ -34,6 +35,7 @@ struct SchoolItem: Codable, Identifiable, Equatable, Sendable {
         case gradeMaxPoints = "grade_max_points"
         case gradeWeight = "grade_weight"
         case countsToAverage = "counts_to_average"
+        case homeworkDueDate = "homework_due_date"
     }
 }
 
@@ -45,11 +47,12 @@ struct SchoolSnapshot: Codable, Sendable {
     var news: [SchoolNewsEntry]?
     /// Last successful baseline per module; a failed fetch must not advance it.
     var sectionFetches: [String: String]?
+    var organizer: SchoolOrganizerState?
 
     enum CodingKeys: String, CodingKey {
         case studentName = "student_name"
         case fetchedAt = "fetched_at"
-        case sections, errors, news
+        case sections, errors, news, organizer
         case sectionFetches = "section_fetches"
     }
 
@@ -118,12 +121,13 @@ enum SchoolChanges {
 }
 
 enum SchoolSection: String, Codable, CaseIterable, Identifiable, Sendable {
-    case today, news, timetable, grades, messages, agenda, attendance, homework, announcements
+    case today, news, organizer, timetable, grades, messages, agenda, attendance, homework, announcements
     var id: String { rawValue }
     var title: String {
         switch self {
         case .today: "Dzisiaj"
         case .news: "Co nowego"
+        case .organizer: "Organizer"
         case .timetable: "Plan lekcji"
         case .grades: "Oceny"
         case .messages: "Wiadomości"
@@ -137,6 +141,7 @@ enum SchoolSection: String, Codable, CaseIterable, Identifiable, Sendable {
         switch self {
         case .today: "sun.max"
         case .news: "bell.badge"
+        case .organizer: "checklist"
         case .timetable: "calendar"
         case .grades: "chart.bar.xaxis"
         case .messages: "envelope"

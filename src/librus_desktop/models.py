@@ -30,6 +30,7 @@ class SchoolItem:
     grade_max_points: float | None = None
     grade_weight: float | None = None
     counts_to_average: bool | None = None
+    homework_due_date: str | None = None
 
 
 @dataclass

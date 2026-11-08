@@ -75,9 +75,8 @@ struct SchoolDashboard: View {
                     Label(error, systemImage: "exclamationmark.circle")
                         .font(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 28).padding(.bottom, 12)
                 }
-                if [.today, .news].contains(model.selectedSection),
-                   !SchoolDayOverview.failedSections(in: model.snapshot).isEmpty {
-                    Label("Nie udało się odświeżyć: \(SchoolDayOverview.failedSections(in: model.snapshot).map(\.title).joined(separator: ", ")). Dane mogą być nieaktualne.",
+                if [.today, .news, .organizer].contains(model.selectedSection), !relevantFailures.isEmpty {
+                    Label("Nie udało się odświeżyć: \(relevantFailures.map(\.title).joined(separator: ", ")). Dane mogą być nieaktualne.",
                           systemImage: "exclamationmark.triangle")
                         .font(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 24).padding(.bottom, 12)
                 } else if let code = model.snapshot?.errors[model.selectedSection.rawValue]
@@ -87,6 +86,7 @@ struct SchoolDashboard: View {
                 }
                 if model.selectedSection == .today { SchoolTodayView(model: model) }
                 else if model.selectedSection == .news { SchoolNewsView(model: model) }
+                else if model.selectedSection == .organizer { SchoolOrganizerView(model: model) }
                 else if model.selectedSection == .timetable { SchoolTimetableView(model: model) }
                 else if model.selectedSection == .grades { SchoolGradesView(model: model) }
                 else if model.selectedSection == .messages { SchoolMessagesView(model: model) }
@@ -99,6 +99,11 @@ struct SchoolDashboard: View {
         .background(SchoolPalette.canvas)
     }
 
+    private var relevantFailures: [SchoolSection] {
+        let failures = SchoolDayOverview.failedSections(in: model.snapshot)
+        return model.selectedSection == .organizer ? failures.filter { [.homework, .agenda].contains($0) } : failures
+    }
+
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label(AppIdentity.name, systemImage: "graduationcap.fill")
@@ -108,6 +113,7 @@ struct SchoolDashboard: View {
             ForEach(SchoolSection.allCases) { section in
                 Button {
                     model.selectedItem = nil
+                    model.detailSection = nil
                     model.selectedSection = section
                     model.search = ""
                 } label: {
@@ -271,6 +277,13 @@ struct SchoolDetailView: View {
                     .buttonStyle(.plain).foregroundStyle(SchoolPalette.secondaryText)
             }
             Divider()
+            if model.detailSourceArchived {
+                Label("Zapisana kopia źródła. Wpis nie jest dostępny w bieżących danych.", systemImage: "archivebox")
+                    .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+            }
+            if let section = model.detailSection, [.agenda, .homework].contains(section) {
+                SchoolTaskAddButton(model: model, item: item, section: section)
+            }
             if model.busy { ProgressView().controlSize(.small) }
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -285,7 +298,7 @@ struct SchoolDetailView: View {
             ForEach(item.attachments) { attachment in
                 Button { model.saveAttachment(attachment, of: item) } label: {
                     Label(attachment.name, systemImage: "arrow.down.doc")
-                }.disabled(model.busy)
+                }.disabled(model.busy || !model.signedIn || model.detailSourceArchived)
             }
             if let error = model.errorMessage { Text(error).font(.caption).foregroundStyle(SchoolPalette.warning) }
         }.padding(30).frame(width: 700, height: 560)

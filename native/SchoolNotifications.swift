@@ -8,6 +8,7 @@ protocol LocalNotificationCenter {
     func authorizationStatus() async -> UNAuthorizationStatus
     func requestAuthorization() async throws -> Bool
     func post(_ change: LocalChange) async throws
+    func replaceTaskReminders(_ reminders: [SchoolTaskReminder]) async throws
 }
 
 @MainActor
@@ -35,6 +36,10 @@ final class SystemLocalNotificationCenter: NSObject, LocalNotificationCenter, UN
         try await center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }
 
+    func replaceTaskReminders(_ reminders: [SchoolTaskReminder]) async throws {
+        try await SchoolTaskReminders.replace(reminders, in: center)
+    }
+
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter, willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
@@ -54,6 +59,9 @@ final class SchoolNotifications: ObservableObject {
     private let openSettings: @MainActor () -> Bool
     private let preferenceKey = "localNotificationsEnabled"
     private let logger = Logger(subsystem: "local.librus.desktop", category: "notifications")
+    private var taskReminders: [SchoolTaskReminder] = []
+    private var reminderRevision = 0
+    private var updatingReminders = false
 
     init(center: any LocalNotificationCenter = SystemLocalNotificationCenter(),
          defaults: UserDefaults = .standard,
@@ -68,6 +76,8 @@ final class SchoolNotifications: ObservableObject {
         needsSettings = status == .denied
         enabled = defaults.bool(forKey: preferenceKey) && [.authorized, .provisional].contains(status)
         if enabled { message = nil }
+        reminderRevision += 1
+        await synchronizeReminders()
     }
 
     func enable() async {
@@ -94,6 +104,28 @@ final class SchoolNotifications: ObservableObject {
         defaults.set(false, forKey: preferenceKey)
         enabled = false
         message = nil
+        reminderRevision += 1
+        Task { await synchronizeReminders() }
+    }
+
+    func setTasks(_ tasks: [SchoolTask], at now: Date) {
+        taskReminders = SchoolTaskReminders.pending(tasks, at: now)
+        reminderRevision += 1
+        Task { await refresh() }
+    }
+
+    /// Serialize system writes; a newer logout/disable must win over a suspended write.
+    private func synchronizeReminders() async {
+        guard !updatingReminders else { return }
+        updatingReminders = true
+        defer { updatingReminders = false }
+        while true {
+            let revision = reminderRevision
+            let desired = enabled ? taskReminders.filter { $0.fireAt > Date() } : []
+            do { try await center.replaceTaskReminders(desired) }
+            catch { report(error, operation: "zaplanować przypomnienia") }
+            if revision == reminderRevision { return }
+        }
     }
 
     func post(_ changes: [LocalChange]) async {

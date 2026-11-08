@@ -14,6 +14,7 @@ final class NewsSilentCenter: LocalNotificationCenter {
     func authorizationStatus() async -> UNAuthorizationStatus { .denied }
     func requestAuthorization() async throws -> Bool { false }
     func post(_ change: LocalChange) async throws { fatalError("Notifications are disabled in this test") }
+    func replaceTaskReminders(_ reminders: [SchoolTaskReminder]) async throws { }
 }
 
 actor NewsBackend: SchoolBackendRunning {

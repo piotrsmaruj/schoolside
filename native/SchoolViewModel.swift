@@ -6,6 +6,8 @@ import OSLog
 final class SchoolViewModel: ObservableObject {
     @Published var selectedSection: SchoolSection = .today
     @Published var selectedItem: SchoolItem?
+    @Published var detailSection: SchoolSection?
+    @Published var detailSourceArchived = false
     @Published var selectedMessage: SchoolItem?
     @Published private(set) var messageLoading = false
     @Published private(set) var messageError: String?
@@ -21,7 +23,7 @@ final class SchoolViewModel: ObservableObject {
 
     private let backend: any SchoolBackendRunning
     private let vault: SecureVault
-    private let now: () -> Date
+    let now: () -> Date
     private let sleep: (TimeInterval) async throws -> Void
     private var account: LoginInput?
     private var session: SavedSession?
@@ -64,8 +66,13 @@ final class SchoolViewModel: ObservableObject {
             account = try vault.loadAccount()
             session = try vault.loadSession()
             snapshot = try vault.loadSnapshot()
+            if var cached = snapshot {
+                cached.organizer = SchoolOrganizer.reconcile(cached.organizer ?? SchoolOrganizerState(), snapshot: cached)
+                snapshot = cached
+            }
             signedIn = account != nil
         } catch { errorMessage = "Nie udało się odczytać zapisanych danych. \(error.localizedDescription)" }
+        notifications.setTasks(organizerTasks, at: now())
         refresh()
         Task { await notifications.refresh() }
     }
@@ -139,15 +146,18 @@ final class SchoolViewModel: ObservableObject {
 
     private func acceptSnapshot(_ response: SchoolResponse, credentials: LoginInput) throws -> [LocalChange] {
         guard let fresh = response.snapshot else { throw DesktopError.transport }
-        let sameAccount = account?.login == credentials.login
+        let savedAccount = account == nil ? try vault.loadAccount() : account
+        let sameAccount = savedAccount?.login == credentials.login
         let previous = sameAccount ? snapshot : nil
         if !sameAccount {
+            notifications.setTasks([], at: now())
             try vault.clear()
             messageDetails.removeAll()
             selectedMessage = nil
         }
         var merged = fresh.merging(previous: previous)
         merged.news = SchoolNews.updated(previous: previous, fresh: fresh, at: now())
+        merged.organizer = SchoolOrganizer.reconcile(previous?.organizer ?? SchoolOrganizerState(), snapshot: fresh)
         snapshot = merged
         account = credentials
         signedIn = true
@@ -155,6 +165,7 @@ final class SchoolViewModel: ObservableObject {
         try vault.saveAccount(credentials)
         try persist(response)
         if let snapshot { try vault.saveSnapshot(snapshot) }
+        notifications.setTasks(organizerTasks, at: now())
         return SchoolChanges.between(old: previous, new: fresh)
     }
 
@@ -180,6 +191,8 @@ final class SchoolViewModel: ObservableObject {
 
     func selectMessage(_ item: SchoolItem) {
         guard !stopped, !busy || messageLoading, let account else { return }
+        detailSection = .messages
+        detailSourceArchived = false
         if messageLoading { operation?.cancel() }
         let requestId = UUID()
         messageRequestId = requestId
@@ -249,7 +262,7 @@ final class SchoolViewModel: ObservableObject {
         guard let account, !busy else { return }
         busy = true
         errorMessage = nil
-        let kind = selectedSection == .homework ? "homework_attachment" : "attachment"
+        let kind = (detailSection ?? selectedSection) == .homework ? "homework_attachment" : "attachment"
         operation = Task { [weak self] in
             guard let self else { return }
             defer { self.finishOperation() }
@@ -273,6 +286,8 @@ final class SchoolViewModel: ObservableObject {
     var news: [SchoolNewsEntry] { snapshot?.news ?? [] }
 
     func openItem(_ item: SchoolItem, in section: SchoolSection) {
+        detailSection = section
+        detailSourceArchived = false
         if section == .messages { selectMessage(item); return }
         selectedSection = section
         selectedItem = item
@@ -295,6 +310,25 @@ final class SchoolViewModel: ObservableObject {
         catch { errorMessage = error.localizedDescription }
     }
 
+    func saveOrganizerState(_ state: SchoolOrganizerState) -> Bool {
+        guard var updated = snapshot else {
+            errorMessage = SchoolOrganizerError.unavailable.localizedDescription
+            return false
+        }
+        updated.organizer = state
+        do {
+            try vault.saveSnapshot(updated)
+            snapshot = updated
+            errorMessage = nil
+            notifications.setTasks(state.tasks, at: now())
+            return true
+        } catch {
+            logger.error("Organizer persistence failed")
+            errorMessage = "Nie udało się zapisać zadania. \(error.localizedDescription)"
+            return false
+        }
+    }
+
     func logout() {
         messageRequestId = nil
         messageDetails.removeAll()
@@ -309,8 +343,11 @@ final class SchoolViewModel: ObservableObject {
         session = nil
         snapshot = nil
         selectedItem = nil
+        detailSection = nil
+        detailSourceArchived = false
         signedIn = false
         showLogin = false
+        notifications.setTasks([], at: now())
         do { try vault.clear() } catch { errorMessage = error.localizedDescription }
     }
 

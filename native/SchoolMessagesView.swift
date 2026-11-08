@@ -121,17 +121,20 @@ struct SchoolMessagesView: View {
     }
 
     private func fullMessage(_ item: SchoolItem) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(item.body.isEmpty ? "Wiadomość nie zawiera tekstu." : item.body)
-                    .foregroundStyle(SchoolPalette.primaryText).textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading).lineSpacing(6)
-                ForEach(SchoolLinks.urls(in: item.body), id: \.self) { url in
-                    Link(destination: url) { Label(url.absoluteString, systemImage: "link") }
-                        .foregroundStyle(SchoolPalette.accent).font(.callout)
-                }
-                if !item.attachments.isEmpty { attachments(item) }
-            }.frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 14) {
+            SchoolTaskAddButton(model: model, item: item, section: .messages)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text(item.body.isEmpty ? "Wiadomość nie zawiera tekstu." : item.body)
+                        .foregroundStyle(SchoolPalette.primaryText).textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading).lineSpacing(6)
+                    ForEach(SchoolLinks.urls(in: item.body), id: \.self) { url in
+                        Link(destination: url) { Label(url.absoluteString, systemImage: "link") }
+                            .foregroundStyle(SchoolPalette.accent).font(.callout)
+                    }
+                    if !item.attachments.isEmpty { attachments(item) }
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 

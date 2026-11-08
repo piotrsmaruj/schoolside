@@ -170,6 +170,22 @@ def test_snapshot_includes_point_grades_and_isolates_failed_sections() -> None:
     assert "private" not in str(snapshot.errors)
 
 
+@pytest.mark.parametrize("deadline", [None, "2026-11-10"])
+def test_homework_preserves_explicit_deadline_separately_from_creation_date(
+    deadline: str | None,
+) -> None:
+    from librus_synergia.models import HomeworkAssignmentData
+
+    class WithHomework(FakeLibrus):
+        async def homework(self) -> list[HomeworkAssignmentData]:
+            return [HomeworkAssignmentData(1, "Ćwiczenia", "Opis", None, "2026-11-01", deadline)]
+
+    snapshot = asyncio.run(collect_snapshot(WithHomework()))
+    item = asdict(snapshot.sections["homework"][0])
+    assert item.get("homework_due_date") == deadline
+    assert item["date"] == (deadline or "2026-11-01")
+
+
 def test_failed_category_reference_preserves_both_grade_sources() -> None:
     class FailedCategories(FakeLibrus):
         async def grade_categories(self) -> dict[int, GradeCategoryData]:

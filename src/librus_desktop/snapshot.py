@@ -101,6 +101,7 @@ def build_sections(
             subtitle=teachers.get(h.teacher_id, ""),
             body=plain_text(h.text),
             date=h.due_date or h.date or "",
+            homework_due_date=h.due_date or None,
             attachments=[Attachment(str(a.id), a.filename or "Załącznik") for a in h.attachments],
         )
         for h in homework

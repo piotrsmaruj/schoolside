@@ -8,6 +8,9 @@ final class NotificationCenterFixture: LocalNotificationCenter {
     var failure: NSError?
     var requests = 0
     var posted: [LocalChange] = []
+    var reminders: [SchoolTaskReminder] = []
+    var holdReminders = false
+    var pendingReminder: CheckedContinuation<Void, Never>?
 
     func authorizationStatus() async -> UNAuthorizationStatus { status }
     func requestAuthorization() async throws -> Bool {
@@ -19,6 +22,14 @@ final class NotificationCenterFixture: LocalNotificationCenter {
     func post(_ change: LocalChange) async throws {
         if let failure { throw failure }
         posted.append(change)
+    }
+    func replaceTaskReminders(_ reminders: [SchoolTaskReminder]) async throws {
+        if holdReminders {
+            holdReminders = false
+            await withCheckedContinuation { pendingReminder = $0 }
+        }
+        if let failure { throw failure }
+        self.reminders = reminders
     }
 }
 
@@ -79,6 +90,51 @@ struct NotificationTests {
         await notifications.enable()
         assert(!notifications.enabled && !notifications.busy)
         assert(notifications.message?.contains("SyntheticNotificationError, 42") == true)
-        print("Swift notifications: denied permission, settings recovery, persistence, revocation and test delivery passed")
+        await taskReminders(notifications, center)
+        print("Swift notifications: permissions, recovery, reminders, cancellation, privacy and in-flight clearing passed")
+    }
+
+    static func taskReminders(_ notifications: SchoolNotifications, _ center: NotificationCenterFixture) async {
+        center.failure = nil
+        center.status = .authorized
+        await notifications.enable()
+        let now = Date()
+        let future = now.addingTimeInterval(3600)
+        let task = SchoolTask(id: "task-one", title: "Synthetic private title", reminderAt: future)
+        let past = SchoolTask(id: "past", title: "Past", reminderAt: now.addingTimeInterval(-1))
+        let done = SchoolTask(id: "done", title: "Done", reminderAt: future, completedAt: now)
+        notifications.setTasks([task, past, done], at: now)
+        await wait { center.reminders.count == 1 }
+        assert(center.reminders[0].taskID == "task-one" && center.reminders[0].fireAt == future)
+        let request = center.reminders[0].request()
+        assert(!request.content.title.contains(task.title) && !request.content.body.contains(task.title))
+        assert(request.trigger is UNCalendarNotificationTrigger)
+        var completed = task
+        completed.completedAt = now
+        notifications.setTasks([completed], at: now)
+        await wait { center.reminders.isEmpty }
+        notifications.setTasks([task], at: now)
+        await wait { center.reminders.count == 1 }
+        notifications.disable()
+        await wait { center.reminders.isEmpty }
+        await notifications.enable()
+        await wait { center.reminders.count == 1 }
+        center.holdReminders = true
+        var updated = task
+        updated.reminderAt = future.addingTimeInterval(60)
+        notifications.setTasks([updated], at: now)
+        await wait { center.pendingReminder != nil }
+        notifications.setTasks([], at: now)
+        center.pendingReminder?.resume()
+        center.pendingReminder = nil
+        await wait { center.reminders.isEmpty }
+    }
+
+    static func wait(_ condition: () -> Bool) async {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while !condition() {
+            precondition(ContinuousClock.now < deadline, "Reminder operation did not finish")
+            await Task.yield()
+        }
     }
 }

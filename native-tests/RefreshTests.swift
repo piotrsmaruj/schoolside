@@ -14,6 +14,7 @@ final class SilentNotifications: LocalNotificationCenter {
     func authorizationStatus() async -> UNAuthorizationStatus { .denied }
     func requestAuthorization() async throws -> Bool { false }
     func post(_ change: LocalChange) async throws { fatalError("Test notifications must stay disabled") }
+    func replaceTaskReminders(_ reminders: [SchoolTaskReminder]) async throws { }
 }
 
 @MainActor

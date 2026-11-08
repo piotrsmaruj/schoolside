@@ -27,6 +27,11 @@ lokalny moduł Python przez nieoficjalną bibliotekę `librus-synergia`.
 - 50 ostatnich wiadomości: lista obok pełnej treści, filtry Wszystkie/Nieprzeczytane/
   Z załącznikami, pobieranie plików. Pełna treść pobierana wyłącznie po kliknięciu.
 - Terminarz, frekwencja, zadania z załącznikami i ogłoszenia.
+- Organizer „Do ogarnięcia”: automatycznie pobrane zadania domowe, własne zadania,
+  notatki, terminy, odhaczanie i opcjonalne przypomnienia macOS.
+  Wiadomość lub wydarzenie można powiązać z zadaniem przyciskiem „Dodaj do ogarnięcia”.
+- „Najbliższe 7 dni”: wspólny widok wydarzeń szkolnych i zadań, liczniki przy dniach,
+  zaległe sprawy i zadania bez terminu. Przy wydarzeniu można zaplanować przygotowanie.
 - Podgląd w pasku menu, wyszukiwanie w zakładce, ręczne odświeżanie.
 - Synchronizacja co 15 minut oraz po wybudzeniu, jeśli dane są starsze.
 - Termin następnego odświeżenia widoczny na dole panelu i w pasku menu.
@@ -114,7 +119,36 @@ bazę planu i nie powoduje lawiny powiadomień. Niepełne dane są oznaczone w p
 - Powiadomienia zawierają liczbę nowych wpisów lub informację o zmianie planu,
   bez ocen i treści wiadomości na ekranie blokady.
 - **Wyloguj i usuń lokalne dane** usuwa konto, sesję, klucz cache i cache.
+  Usuwa również zadania organizera i odwołuje ich oczekujące przypomnienia.
   Ręcznie pobrane załączniki pozostają w wybranych lokalizacjach.
+
+## Organizer
+
+W zakładce **Organizer** przełączasz listę „Do ogarnięcia” i widok „Najbliższe 7 dni”
+(dzisiaj i sześć kolejnych dni). Zadania domowe pojawiają się automatycznie, również
+podczas pierwszego pobrania. Starsze niewykonane zadania trafiają do „Zaległe”.
+Wpisy bez podanego terminu oddania trafiają do „Bez terminu”; data dodania zadania
+nie zastępuje terminu. Po aktualizacji odśwież dane, aby uzupełnić terminy w starszym cache.
+Wykonanie zaznaczasz kółkiem przy zadaniu; „Pokaż zrobione” pozwala je przywrócić.
+Odhaczenie jest lokalne i nie zmienia niczego w Librusie.
+
+„Nowe zadanie” tworzy własny wpis z opcjonalnym terminem, notatką i przypomnieniem.
+Przy otwartej wiadomości, wydarzeniu i zadaniu domowym dostępny jest przycisk
+„Dodaj do ogarnięcia”. Kolejne użycie otwiera już powiązane zadanie.
+„Zaplanuj przygotowanie” przy wydarzeniu otwiera edytor, w którym możesz wybrać
+wcześniejszy termin. W edytorze zadania z organizera „Pokaż źródło” wraca do wpisu;
+gdy nie ma go w bieżących danych, pokazuje zapisaną kopię bez pobierania wiadomości.
+
+Synchronizacja zachowuje odhaczenia i notatki. Tytuł i termin automatycznego zadania
+aktualizują się z Librusa; własne zadania możesz edytować i usuwać. Zniknięcie
+szkolnego wpisu nie usuwa zadania z organizera. Cały organizer jest częścią
+szyfrowanych danych offline i pozostaje dostępny po restarcie.
+
+Przypomnienie ma konkretną datę i godzinę; zmiana terminu zadania w Librusie nie
+przesuwa go automatycznie. Wymaga włączenia powiadomień Schoolside i zgody macOS.
+Zapisane przypomnienia obsługuje system także po zamknięciu aplikacji. Baner nie
+zawiera tytułu zadania ani danych ucznia. Wykonanie/usunięcie zadania, wyłączenie
+powiadomień lub wylogowanie odwołuje odpowiednie oczekujące przypomnienia.
 
 ## Ograniczenia pierwszej wersji
 
@@ -139,7 +173,7 @@ jest podpisana lokalnie ad hoc, bez publikacji w App Store.
 
 Testy używają danych syntetycznych, bez logowania do konta użytkownika. Obejmują
 procenty, częściowe awarie, transport sekretów, anulowanie, szyfrowanie i wylogowanie.
-Piętnaście zestawów testów Swift obejmuje też zgodę na powiadomienia i jej cofnięcie,
+Siedemnaście zestawów testów Swift obejmuje też zgodę na powiadomienia i jej cofnięcie,
 zapamiętywanie motywu oraz tygodniowy układ planu (w tym weekendy i równoległe lekcje).
 Kontrolowany zegar sprawdza odświeżanie po ręcznym pobraniu, zajętą aplikację,
 wybudzenie, ponawianie po błędzie sieci oraz zatrzymanie po wylogowaniu i zamknięciu.
@@ -150,6 +184,9 @@ trybie i przy zwiększonym kontraście. Testy przeglądania obejmują filtry oce
 załączniki na liście wiadomości, zmianę wyboru podczas pobierania oraz spóźnione
 odpowiedzi po wylogowaniu. Testy Python obejmują metadane ocen i załączników.
 Testy cache używają izolowanego magazynu w pamięci zamiast systemowego Keychain.
+Testy organizera obejmują import bez duplikatów, jawne terminy oddania, wykonanie
+i notatki podczas synchronizacji, błędy zapisu, restart, ponowne logowanie, zmianę
+konta, kopie źródeł oraz odwoływanie przypomnień podczas trwającej aktualizacji.
 
 Osobny test połączenia: `scripts/build_app.py` → `build/Schoolside Connection Check.app`.
 Ten test nie zachowuje hasła ani danych konta na dysku.
