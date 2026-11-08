@@ -10,6 +10,23 @@ enum SchoolDensity: String, CaseIterable, Identifiable {
     var bodyLines: Int { self == .compact ? 1 : 2 }
 }
 
+enum SchoolTextSize: String, CaseIterable, Identifiable {
+    case standard, large
+    var id: String { rawValue }
+    var title: String { self == .standard ? "Standardowy" : "Duży" }
+    var scale: CGFloat { self == .standard ? 1 : 1.25 }
+
+    @MainActor
+    func pointSize(for style: NSFont.TextStyle) -> CGFloat {
+        NSFont.preferredFont(forTextStyle: style, options: [:]).pointSize * scale
+    }
+
+    @MainActor
+    func font(_ style: NSFont.TextStyle, design: Font.Design = .default) -> Font {
+        .system(size: pointSize(for: style), weight: style == .headline ? .semibold : .regular, design: design)
+    }
+}
+
 enum SchoolTheme: String, CaseIterable, Identifiable {
     case system, light, dark
     var id: String { rawValue }
@@ -40,7 +57,11 @@ enum SchoolTheme: String, CaseIterable, Identifiable {
 final class SchoolAppearance: ObservableObject {
     static let preferenceKey = "schoolTheme"
     static let densityPreferenceKey = "schoolDensity"
+    static let textSizePreferenceKey = "schoolTextSize"
     private let defaults: UserDefaults
+    @Published var textSize: SchoolTextSize {
+        didSet { defaults.set(textSize.rawValue, forKey: Self.textSizePreferenceKey) }
+    }
     @Published var density: SchoolDensity {
         didSet { defaults.set(density.rawValue, forKey: Self.densityPreferenceKey) }
     }
@@ -53,8 +74,26 @@ final class SchoolAppearance: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        textSize = SchoolTextSize(rawValue: defaults.string(forKey: Self.textSizePreferenceKey) ?? "") ?? .standard
         density = SchoolDensity(rawValue: defaults.string(forKey: Self.densityPreferenceKey) ?? "") ?? .compact
         theme = SchoolTheme(rawValue: defaults.string(forKey: Self.preferenceKey) ?? "") ?? .system
         NSApp?.appearance = theme.nativeAppearance
+    }
+}
+
+private struct SchoolFont: ViewModifier {
+    @EnvironmentObject private var appearance: SchoolAppearance
+    let style: NSFont.TextStyle
+    let design: Font.Design
+
+    func body(content: Content) -> some View {
+        content.font(appearance.textSize.font(style, design: design))
+    }
+}
+
+extension View {
+    /// Applies the user's reading size to content and metadata, including sheets.
+    func schoolFont(_ style: NSFont.TextStyle, design: Font.Design = .default) -> some View {
+        modifier(SchoolFont(style: style, design: design))
     }
 }

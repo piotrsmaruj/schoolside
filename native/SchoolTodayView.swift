@@ -7,6 +7,7 @@ final class SchoolDaySelection: ObservableObject {
 
 struct SchoolTodayView: View {
     @ObservedObject var model: SchoolViewModel
+    @EnvironmentObject private var appearance: SchoolAppearance
     @StateObject private var selection = SchoolDaySelection()
 
     var body: some View {
@@ -32,12 +33,12 @@ struct SchoolTodayView: View {
                 Text("Jutro").tag(1)
             }.pickerStyle(.segmented).frame(width: 200)
             Spacer()
-            Text(SchoolDates.display(day.dayKey)).font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+            Text(SchoolDates.display(day.dayKey)).schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
         }
     }
 
     private func summary(_ day: SchoolDayOverview, now: Date) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 180 * appearance.textSize.scale), alignment: .top)], spacing: 10) {
             SchoolSummaryCard(title: selection.offset == 0 ? "Teraz" : "Lekcje jutro",
                 value: selection.offset == 0 ? currentTitle(day)
                     : day.planState == .unavailable ? "Plan niedostępny" : "\(day.lessons.filter { !$0.canceled }.count)",
@@ -118,11 +119,11 @@ struct SchoolTodayView: View {
     private func eventRow(_ item: SchoolItem, now: Date) -> some View {
         Button { model.openItem(item, in: .agenda) } label: {
             HStack(alignment: .top, spacing: 12) {
-                Text(SchoolDates.relativeDay(item.date, now: now)).font(.caption).fontWeight(.semibold)
+                Text(SchoolDates.relativeDay(item.date, now: now)).schoolFont(.caption1).fontWeight(.semibold)
                     .foregroundStyle(SchoolPalette.accent).frame(width: 64, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.title).font(.callout).fontWeight(.semibold)
-                    if !item.body.isEmpty { Text(item.body).font(.callout).foregroundStyle(SchoolPalette.secondaryText).lineLimit(2) }
+                    Text(item.title).schoolFont(.callout).fontWeight(.semibold)
+                    if !item.body.isEmpty { Text(item.body).schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText).lineLimit(2) }
                 }
                 Spacer(minLength: 0)
             }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
@@ -134,26 +135,26 @@ struct SchoolTodayView: View {
         Button { model.openItem(item, in: section) } label: {
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.title).font(.callout).fontWeight(.medium)
-                    Text(section == .grades ? item.subtitle : item.body).font(.caption)
+                    Text(item.title).schoolFont(.callout).fontWeight(.medium)
+                    Text(section == .grades ? item.subtitle : item.body).schoolFont(.caption1)
                         .foregroundStyle(SchoolPalette.secondaryText).lineLimit(2)
                 }
                 Spacer(minLength: 0)
-                if !item.value.isEmpty { Text(item.value).font(.headline).foregroundStyle(SchoolPalette.accent) }
+                if !item.value.isEmpty { Text(item.value).schoolFont(.headline).foregroundStyle(SchoolPalette.accent) }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
     private func sectionLink(_ title: String, to section: SchoolSection) -> some View {
-        Button(title) { model.selectedSection = section; model.search = "" }.font(.caption).foregroundStyle(SchoolPalette.accent)
+        Button(title) { model.selectedSection = section; model.search = "" }.schoolFont(.caption1).foregroundStyle(SchoolPalette.accent)
     }
 
     private func sectionTitle(_ title: String, symbol: String) -> some View {
-        Label(title, systemImage: symbol).font(.headline).padding(.bottom, 4)
+        Label(title, systemImage: symbol).schoolFont(.headline).padding(.bottom, 4)
     }
 
     private func empty(_ text: String) -> some View {
-        Text(text).font(.callout).foregroundStyle(SchoolPalette.secondaryText).padding(.vertical, 6)
+        Text(text).schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText).padding(.vertical, 6)
     }
 
 }
@@ -165,9 +166,9 @@ struct SchoolSummaryCard: View {
     let symbol: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: symbol).font(.caption).foregroundStyle(SchoolPalette.secondaryText).lineLimit(1)
-            Text(value).font(.headline).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
-            Text(detail.isEmpty ? " " : detail).font(.caption).foregroundStyle(SchoolPalette.secondaryText).lineLimit(2)
+            Label(title, systemImage: symbol).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText).lineLimit(1)
+            Text(value).schoolFont(.headline).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+            Text(detail.isEmpty ? " " : detail).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText).lineLimit(2)
         }.padding(14).frame(maxWidth: .infinity, minHeight: 102, alignment: .topLeading)
             .background(SchoolPalette.surface, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(SchoolPalette.border))
@@ -180,7 +181,7 @@ struct SchoolPanel<Content: View>: View {
     @ViewBuilder let content: Content
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(title, systemImage: symbol).font(.headline)
+            Label(title, systemImage: symbol).schoolFont(.headline)
             content
         }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
             .background(SchoolPalette.surface, in: RoundedRectangle(cornerRadius: 14))

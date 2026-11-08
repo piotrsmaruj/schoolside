@@ -46,13 +46,13 @@ struct SchoolTaskEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(existing == nil ? "Nowe zadanie" : "Edytuj zadanie").font(.title2).fontWeight(.semibold)
+            Text(existing == nil ? "Nowe zadanie" : "Edytuj zadanie").schoolFont(.title2).fontWeight(.semibold)
             Form {
                 taskFields
                 reminderFields
                 if let source = current.source { sourceFields(source) }
             }.formStyle(.grouped)
-            if let failure = form.failure { Text(failure).font(.callout).foregroundStyle(SchoolPalette.warning) }
+            if let failure = form.failure { Text(failure).schoolFont(.callout).foregroundStyle(SchoolPalette.warning) }
             actions
         }.padding(24).frame(width: 620, height: 650)
             .environment(\.locale, Locale(identifier: "pl_PL"))
@@ -71,15 +71,15 @@ struct SchoolTaskEditor: View {
                 LabeledContent("Tytuł", value: current.title)
                 LabeledContent("Termin z Librusa", value: current.dueDate.map(SchoolDates.display) ?? "Bez terminu")
                 Text("Tytuł i termin aktualizują się z Librusa. Twoja notatka i odhaczenie pozostają zapisane.")
-                    .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                    .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             } else {
                 TextField("Tytuł", text: $form.draft.title)
                 Toggle("Termin zadania", isOn: $form.hasDueDate)
                 if form.hasDueDate { DatePicker("Do kiedy", selection: $form.dueDate, displayedComponents: .date) }
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text("Twoja notatka").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
-                TextEditor(text: $form.draft.note).font(.body).frame(minHeight: 76)
+                Text("Twoja notatka").schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
+                TextEditor(text: $form.draft.note).schoolFont(.body).frame(minHeight: 76)
                     .accessibilityLabel("Twoja notatka")
             }
         }
@@ -92,11 +92,11 @@ struct SchoolTaskEditor: View {
                 DatePicker("Kiedy", selection: $form.reminderAt, displayedComponents: [.date, .hourAndMinute])
                 if current.isCompleted {
                     Text("Zadanie jest zrobione — przypomnienie pozostaje wyłączone.")
-                        .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                        .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
                 }
                 if !notifications.enabled {
                     Text("Włącz powiadomienia Schoolside, aby otrzymywać przypomnienia.")
-                        .font(.caption).foregroundStyle(SchoolPalette.warning)
+                        .schoolFont(.caption1).foregroundStyle(SchoolPalette.warning)
                     SchoolNotificationControls(notifications: notifications)
                 }
             }
@@ -111,7 +111,7 @@ struct SchoolTaskEditor: View {
             }
             if source.section == .agenda && !form.draft.isAutomatic {
                 Text("Możesz ustawić wcześniejszy termin, aby zaplanować przygotowanie do wydarzenia.")
-                    .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                    .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             }
             if let onOpenSource { Button("Pokaż źródło", action: onOpenSource) }
         }

@@ -29,6 +29,8 @@ def main() -> None:
         "SchoolBackend.swift",
         "SchoolNotifications.swift",
         "SchoolAppearance.swift",
+        "SchoolAgendaList.swift",
+        "SchoolAgendaView.swift",
         "SchoolPalette.swift",
         "TimetableWeek.swift",
         "SchoolTimetableView.swift",

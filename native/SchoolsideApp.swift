@@ -9,6 +9,7 @@ struct SchoolsideApp: App {
     var body: some Scene {
         Window(AppIdentity.name, id: "main") {
             DesktopRootView(model: model)
+                .schoolFont(.body)
                 .environmentObject(appearance)
                 .preferredColorScheme(appearance.theme.colorScheme)
                 .tint(SchoolPalette.accent)
@@ -31,6 +32,8 @@ struct SchoolsideApp: App {
         .defaultPosition(.center)
         MenuBarExtra {
             QuickSchoolView(model: model)
+                .schoolFont(.body)
+                .environmentObject(appearance)
                 .preferredColorScheme(appearance.theme.colorScheme)
                 .tint(SchoolPalette.accent)
                 .foregroundStyle(SchoolPalette.primaryText)
@@ -43,25 +46,26 @@ struct SchoolsideApp: App {
 
 struct QuickSchoolView: View {
     @ObservedObject var model: SchoolViewModel
+    @EnvironmentObject private var appearance: SchoolAppearance
     @Environment(\.openWindow) private var openWindow
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label(AppIdentity.name, systemImage: "graduationcap.fill").font(.headline).foregroundStyle(SchoolPalette.accent)
-            Text(AppIdentity.tagline).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+            Label(AppIdentity.name, systemImage: "graduationcap.fill").schoolFont(.headline).foregroundStyle(SchoolPalette.accent)
+            Text(AppIdentity.tagline).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             Text(model.snapshot?.studentName ?? "Zaloguj się w aplikacji").foregroundStyle(SchoolPalette.secondaryText)
             Text("Nieprzeczytane wiadomości: \(model.unreadCount)")
-            Text("Nieprzejrzane nowości: \(model.news.count)").font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+            Text("Nieprzejrzane nowości: \(model.news.count)").schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
             if let next = model.nextRefreshAt {
-                Text("Następne odświeżenie: \(next, style: .time)").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                Text("Następne odświeżenie: \(next, style: .time)").schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             }
             ForEach(Array(model.items(.timetable).filter { $0.date == SchoolDates.today }.prefix(5))) { item in
                 HStack { Text(item.time).foregroundStyle(SchoolPalette.secondaryText); Text(item.title).strikethrough(item.canceled) }
-                    .font(.callout)
+                    .schoolFont(.callout)
             }
             Divider()
             Button("Otwórz Schoolside") { openWindow(id: "main"); NSApp.activate() }
             Button("Odśwież dane") { model.refresh() }.disabled(model.busy || !model.signedIn)
             Button("Zakończ") { NSApp.terminate(nil) }
-        }.padding(22).frame(width: 330)
+        }.padding(22).frame(width: 330 * appearance.textSize.scale)
     }
 }

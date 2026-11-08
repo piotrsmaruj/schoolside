@@ -12,6 +12,7 @@ TARGETS = {
     "SchoolBackendTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolBackend.swift"],
     "NotificationTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolNotifications.swift"],
     "AppearanceTests": ["SchoolAppearance.swift"],
+    "AgendaListTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolAgendaList.swift"],
     "PaletteTests": ["SchoolPalette.swift"],
     "GradeListTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolGradeList.swift"],
     "OrganizerTests": ["ProbeModels.swift", "SchoolModels.swift", "SchoolWeekOverview.swift"],

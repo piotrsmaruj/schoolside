@@ -52,7 +52,7 @@ struct SchoolOrganizerView: View {
                 Text("Do zrobienia: \(model.organizerTasks.filter { !$0.isCompleted }.count)")
                 Spacer()
                 Toggle("Pokaż zrobione", isOn: $browser.showCompleted).toggleStyle(.checkbox)
-            }.font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+            }.schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
         }
     }
 
@@ -80,16 +80,16 @@ struct SchoolOrganizerView: View {
             ForEach(overview.days) { day in
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text(dayTitle(day.date, now: now)).font(.headline)
+                        Text(dayTitle(day.date, now: now)).schoolFont(.headline)
                         Spacer()
                         Text("Zadania: \(day.pendingCount) · Wydarzenia: \(day.events.count)")
-                            .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                            .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
                     }
                     ForEach(day.events) { event in eventRow(event) }
                     ForEach(day.tasks) { task in taskRow(task, showDate: false) }
                     if day.tasks.isEmpty && day.events.isEmpty {
                         Text(model.search.isEmpty ? "Brak zaplanowanych spraw" : "Brak pasujących wpisów")
-                            .font(.callout).foregroundStyle(SchoolPalette.secondaryText).padding(.vertical, 8)
+                            .schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText).padding(.vertical, 8)
                     }
                 }
             }
@@ -100,8 +100,8 @@ struct SchoolOrganizerView: View {
     private func taskGroup(_ title: String, tasks: [SchoolTask], warning: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(title).font(.headline).foregroundStyle(warning ? SchoolPalette.warning : SchoolPalette.primaryText)
-                Text("\(tasks.count)").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                Text(title).schoolFont(.headline).foregroundStyle(warning ? SchoolPalette.warning : SchoolPalette.primaryText)
+                Text("\(tasks.count)").schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             }
             ForEach(tasks) { task in taskRow(task) }
         }
@@ -119,8 +119,8 @@ struct SchoolOrganizerView: View {
             Button { model.openItem(item, in: .agenda) } label: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title).fontWeight(.medium)
-                    if !item.body.isEmpty { Text(item.body).font(.callout).lineLimit(3) }
-                    if !item.time.isEmpty { Text(item.time).font(.caption) }
+                    if !item.body.isEmpty { Text(item.body).schoolFont(.callout).lineLimit(3) }
+                    if !item.time.isEmpty { Text(item.time).schoolFont(.caption1) }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }.buttonStyle(.plain)
             Button("Zaplanuj przygotowanie") { browser.editingTask = model.task(for: item, in: .agenda) }
@@ -152,20 +152,20 @@ private struct SchoolOrganizerTaskRow: View {
         HStack(alignment: .center, spacing: 12) {
             Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.title2).foregroundStyle(task.isCompleted ? SchoolPalette.success : SchoolPalette.secondaryText)
+                    .schoolFont(.title2).foregroundStyle(task.isCompleted ? SchoolPalette.success : SchoolPalette.secondaryText)
             }.buttonStyle(.plain)
                 .accessibilityLabel("\(task.isCompleted ? "Przywróć zadanie" : "Oznacz jako zrobione"): \(task.title)")
             Button(action: edit) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(task.title).fontWeight(.medium).strikethrough(task.isCompleted)
                     if !task.note.isEmpty {
-                        Text(task.note).font(.callout).lineLimit(appearance.density.bodyLines)
+                        Text(task.note).schoolFont(.callout).lineLimit(appearance.density.bodyLines)
                             .foregroundStyle(SchoolPalette.secondaryText)
                     }
                     metadata
                 }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain)
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+            Image(systemName: "chevron.right").schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
         }.padding(appearance.density.rowPadding)
             .background(SchoolPalette.surface, in: RoundedRectangle(cornerRadius: 12))
     }
@@ -178,6 +178,6 @@ private struct SchoolOrganizerTaskRow: View {
             if let reminder = task.reminderAt, !task.isCompleted {
                 Label(SchoolDates.formatted(reminder, "d MMM, HH:mm"), systemImage: "bell")
             }
-        }.font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+        }.schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
     }
 }

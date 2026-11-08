@@ -14,7 +14,7 @@ struct SchoolSettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Label("Ustawienia", systemImage: "gearshape").font(.title2).fontWeight(.semibold)
+                Label("Ustawienia", systemImage: "gearshape").schoolFont(.title2).fontWeight(.semibold)
                 Spacer()
                 Button("Gotowe") { dismiss() }.keyboardShortcut(.cancelAction)
             }
@@ -27,10 +27,10 @@ struct SchoolSettingsView: View {
                 Section("O aplikacji") {
                     Text(AppIdentity.name).fontWeight(.semibold)
                     Text(AppIdentity.tagline)
-                    Text(AppIdentity.affiliation).font(.caption)
+                    Text(AppIdentity.affiliation).schoolFont(.caption1)
                 }
             }.formStyle(.grouped)
-        }.padding(24).frame(width: 560, height: 620)
+        }.padding(24).frame(width: 560 * appearance.textSize.scale, height: 620)
             .confirmationDialog("Wylogować i usunąć lokalne dane?", isPresented: $state.confirmLogout) {
                 Button("Wyloguj i usuń dane", role: .destructive) { model.logout(); dismiss() }
                 Button("Anuluj", role: .cancel) { }
@@ -47,8 +47,13 @@ struct SchoolSettingsView: View {
             Picker("Widok list", selection: $appearance.density) {
                 ForEach(SchoolDensity.allCases) { Text($0.title).tag($0) }
             }
+            Picker("Rozmiar tekstu", selection: $appearance.textSize) {
+                ForEach(SchoolTextSize.allCases) { Text($0.title).tag($0) }
+            }
+            Text("Duży powiększa tekst, daty i opisy w całej aplikacji.")
+                .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             Text("Kompaktowy mieści więcej wpisów. Wygodny zostawia więcej odstępów.")
-                .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
         }
     }
 
@@ -56,7 +61,7 @@ struct SchoolSettingsView: View {
         Section("Konto i dane") {
             if let name = model.snapshot?.studentName { LabeledContent("Uczeń", value: name) }
             Text("Dane offline, oznaczenia nowości i organizer są szyfrowane na tym Macu.")
-                .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             Button("Wyloguj i usuń lokalne dane", role: .destructive) { state.confirmLogout = true }
         }
     }

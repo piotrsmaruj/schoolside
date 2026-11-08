@@ -14,7 +14,7 @@ struct SchoolNewsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Nieprzejrzane wpisy: \(model.news.count)").font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+                Text("Nieprzejrzane wpisy: \(model.news.count)").schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
                 Spacer()
                 Button("Oznacz wszystkie jako przejrzane") { model.markAllNewsReviewed() }
                     .disabled(model.news.isEmpty)
@@ -54,9 +54,9 @@ struct SchoolNewsPreview: View {
             if model.news.isEmpty {
                 Label(model.snapshot?.errors.isEmpty == false ? "Niepełne dane" : "Jesteś na bieżąco",
                       systemImage: model.snapshot?.errors.isEmpty == false ? "exclamationmark.triangle" : "checkmark.circle")
-                    .font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+                    .schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
                 Text(model.snapshot?.errors.isEmpty == false ? "Nie udało się sprawdzić wszystkich modułów."
-                     : "Nowe wpisy pozostaną tutaj do przejrzenia.").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                     : "Nowe wpisy pozostaną tutaj do przejrzenia.").schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             }
             ForEach(Array(model.news.prefix(3))) { entry in
                 SchoolNewsRow(entry: entry) { model.openNews(entry) }
@@ -64,7 +64,7 @@ struct SchoolNewsPreview: View {
             }
             if !model.news.isEmpty {
                 Button("Przejrzyj nowości") { model.selectedSection = .news; model.search = "" }
-                    .font(.caption).foregroundStyle(SchoolPalette.accent)
+                    .schoolFont(.caption1).foregroundStyle(SchoolPalette.accent)
             }
         }
     }
@@ -84,13 +84,13 @@ struct SchoolNewsRow: View {
                 Image(systemName: entry.section.icon).foregroundStyle(entry.section == .timetable ? SchoolPalette.warning : SchoolPalette.accent)
                     .frame(width: 18).padding(.top, 2)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(label).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
-                    Text(entry.item.title).font(.callout).fontWeight(.semibold)
-                    if !entry.item.value.isEmpty { Text(entry.item.value).font(.callout).foregroundStyle(SchoolPalette.accent) }
-                    Text(detail).font(.caption).foregroundStyle(SchoolPalette.secondaryText).lineLimit(2)
+                    Text(label).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
+                    Text(entry.item.title).schoolFont(.callout).fontWeight(.semibold)
+                    if !entry.item.value.isEmpty { Text(entry.item.value).schoolFont(.callout).foregroundStyle(SchoolPalette.accent) }
+                    Text(detail).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText).lineLimit(2)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.caption2).foregroundStyle(SchoolPalette.secondaryText)
+                Image(systemName: "chevron.right").schoolFont(.caption2).foregroundStyle(SchoolPalette.secondaryText)
             }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }

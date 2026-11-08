@@ -30,10 +30,10 @@ struct SchoolMessagesView: View {
                 ForEach(SchoolMessageFilter.allCases) { filter in
                     Text(filter.title).tag(filter)
                 }
-            }.pickerStyle(.segmented).controlSize(.small)
+            }.pickerStyle(.segmented).controlSize(appearance.textSize == .large ? .regular : .small)
                 .padding(.horizontal, 16).padding(.top, 12)
             Text("Wiadomości: \(listing.items.count)")
-                .font(.caption).foregroundStyle(SchoolPalette.secondaryText).padding(.horizontal, 16)
+                .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText).padding(.horizontal, 16)
             if listing.items.isEmpty {
                 ContentUnavailableView("Brak wiadomości", systemImage: "envelope",
                     description: Text(model.search.isEmpty && browser.filter == .all
@@ -65,7 +65,7 @@ struct SchoolMessagesView: View {
                 if listing.selectedID == nil {
                     Label("Ta wiadomość jest poza bieżącym filtrem lub wynikami wyszukiwania.",
                           systemImage: "line.3.horizontal.decrease.circle")
-                        .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                        .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
                 }
                 Divider().overlay(SchoolPalette.border)
                 if model.messageLoading {
@@ -85,11 +85,11 @@ struct SchoolMessagesView: View {
 
     private func detailHeading(_ item: SchoolItem) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(item.title).font(.title2).fontWeight(.semibold)
+            Text(item.title).schoolFont(.title2).fontWeight(.semibold)
                 .foregroundStyle(SchoolPalette.primaryText).textSelection(.enabled)
             if !item.subtitle.isEmpty {
                 Label(item.subtitle, systemImage: "person")
-                    .font(.callout).foregroundStyle(SchoolPalette.secondaryText).textSelection(.enabled)
+                    .schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText).textSelection(.enabled)
             }
             HStack(spacing: 12) {
                 Label(SchoolDates.display(item.date), systemImage: "calendar")
@@ -97,7 +97,7 @@ struct SchoolMessagesView: View {
                 if SchoolMessageList.hasAttachments(item) {
                     Label("Załączniki", systemImage: "paperclip")
                 }
-            }.font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+            }.schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
         }
     }
 
@@ -105,15 +105,15 @@ struct SchoolMessagesView: View {
         VStack(spacing: 12) {
             ProgressView()
             Text("Pobieram pełną treść wiadomości…")
-                .font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+                .schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func messageFailure(_ error: String, item: SchoolItem) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Nie udało się otworzyć wiadomości", systemImage: "exclamationmark.triangle")
-                .font(.headline).foregroundStyle(SchoolPalette.warning)
-            Text(error).font(.callout).foregroundStyle(SchoolPalette.primaryText).textSelection(.enabled)
+                .schoolFont(.headline).foregroundStyle(SchoolPalette.warning)
+            Text(error).schoolFont(.callout).foregroundStyle(SchoolPalette.primaryText).textSelection(.enabled)
             Button("Spróbuj ponownie") { model.selectMessage(item) }
                 .disabled(model.busy && !model.messageLoading)
         }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
@@ -130,7 +130,7 @@ struct SchoolMessagesView: View {
                         .frame(maxWidth: .infinity, alignment: .leading).lineSpacing(6)
                     ForEach(SchoolLinks.urls(in: item.body), id: \.self) { url in
                         Link(destination: url) { Label(url.absoluteString, systemImage: "link") }
-                            .foregroundStyle(SchoolPalette.accent).font(.callout)
+                            .foregroundStyle(SchoolPalette.accent).schoolFont(.callout)
                     }
                     if !item.attachments.isEmpty { attachments(item) }
                 }.frame(maxWidth: .infinity, alignment: .leading)
@@ -140,7 +140,7 @@ struct SchoolMessagesView: View {
 
     private func attachments(_ item: SchoolItem) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Załączniki").font(.headline).foregroundStyle(SchoolPalette.primaryText)
+            Text("Załączniki").schoolFont(.headline).foregroundStyle(SchoolPalette.primaryText)
             ForEach(item.attachments) { attachment in
                 Button { model.saveAttachment(attachment, of: item) } label: {
                     Label(attachment.name, systemImage: "arrow.down.doc")
@@ -163,7 +163,7 @@ private struct SchoolMessageRow: View {
                 metadata
                 title
                 if !item.body.isEmpty {
-                    Text(item.body).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                    Text(item.body).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
                         .lineLimit(appearance.density.bodyLines)
                 }
             }.padding(appearance.density.rowPadding)
@@ -179,9 +179,9 @@ private struct SchoolMessageRow: View {
     private var metadata: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(item.subtitle.isEmpty ? "Wiadomość" : item.subtitle)
-                .lineLimit(1).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                .lineLimit(1).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             Spacer(minLength: 4)
-            Text(SchoolDates.display(item.date)).font(.caption2)
+            Text(SchoolDates.display(item.date)).schoolFont(.caption2)
                 .foregroundStyle(SchoolPalette.secondaryText)
         }
     }
@@ -192,7 +192,7 @@ private struct SchoolMessageRow: View {
                 Circle().fill(SchoolPalette.accent).frame(width: 6, height: 6)
                     .accessibilityLabel("Nieprzeczytana")
             }
-            Text(item.title).font(.callout).fontWeight(item.unread ? .semibold : .medium)
+            Text(item.title).schoolFont(.callout).fontWeight(item.unread ? .semibold : .medium)
                 .foregroundStyle(SchoolPalette.primaryText).lineLimit(2)
             Spacer(minLength: 0)
             if SchoolMessageList.hasAttachments(item) {

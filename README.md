@@ -27,6 +27,8 @@ lokalny moduł Python przez nieoficjalną bibliotekę `librus-synergia`.
 - 50 ostatnich wiadomości: lista obok pełnej treści, filtry Wszystkie/Nieprzeczytane/
   Z załącznikami, pobieranie plików. Pełna treść pobierana wyłącznie po kliknięciu.
 - Terminarz, frekwencja, zadania z załącznikami i ogłoszenia.
+  Terminarz grupuje wydarzenia w Dzisiaj/Nadchodzące i zwijaną historię Minione.
+  Wyszukiwanie obejmuje też historię i automatycznie pokazuje pasujące minione wpisy.
 - Organizer „Do ogarnięcia”: automatycznie pobrane zadania domowe, własne zadania,
   notatki, terminy, odhaczanie i opcjonalne przypomnienia macOS.
   Wiadomość lub wydarzenie można powiązać z zadaniem przyciskiem „Dodaj do ogarnięcia”.
@@ -41,6 +43,8 @@ lokalny moduł Python przez nieoficjalną bibliotekę `librus-synergia`.
 - Paleta: ciepłe neutralne tło, grafit, białe karty i przygaszony śliwkowy akcent;
   adaptacyjne odpowiedniki dla ciemnego motywu i zwiększonego kontrastu.
 - Zwarte listy i zapamiętywany wybór widoku Kompaktowy/Wygodny.
+- Rozmiar tekstu Standardowy/Duży w Ustawieniach → Wygląd, zapamiętywany na tym Macu.
+  Obejmuje treść, daty, opisy, plan lekcji i podgląd w pasku menu.
 - Ustawienia pod przyciskiem ⚙︎: wygląd, powiadomienia i konto; skrót ⌘,.
 
 ## Uruchomienie
@@ -173,7 +177,7 @@ jest podpisana lokalnie ad hoc, bez publikacji w App Store.
 
 Testy używają danych syntetycznych, bez logowania do konta użytkownika. Obejmują
 procenty, częściowe awarie, transport sekretów, anulowanie, szyfrowanie i wylogowanie.
-Siedemnaście zestawów testów Swift obejmuje też zgodę na powiadomienia i jej cofnięcie,
+Osiemnaście zestawów testów Swift obejmuje też zgodę na powiadomienia i jej cofnięcie,
 zapamiętywanie motywu oraz tygodniowy układ planu (w tym weekendy i równoległe lekcje).
 Kontrolowany zegar sprawdza odświeżanie po ręcznym pobraniu, zajętą aplikację,
 wybudzenie, ponawianie po błędzie sieci oraz zatrzymanie po wylogowaniu i zamknięciu.
@@ -184,6 +188,9 @@ trybie i przy zwiększonym kontraście. Testy przeglądania obejmują filtry oce
 załączniki na liście wiadomości, zmianę wyboru podczas pobierania oraz spóźnione
 odpowiedzi po wylogowaniu. Testy Python obejmują metadane ocen i załączników.
 Testy cache używają izolowanego magazynu w pamięci zamiast systemowego Keychain.
+Testy wyglądu sprawdzają powiększanie tekstu i zapamiętywanie rozmiaru. Testy
+Terminarza obejmują grupowanie, kolejność, wyszukiwanie historii oraz zmianę dnia
+w Warszawie; wydarzenia z niepoprawną datą pozostają w grupie „Bez daty”.
 Testy organizera obejmują import bez duplikatów, jawne terminy oddania, wykonanie
 i notatki podczas synchronizacji, błędy zapisu, restart, ponowne logowanie, zmianę
 konta, kopie źródeł oraz odwoływanie przypomnień podczas trwającej aktualizacji.

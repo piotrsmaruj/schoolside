@@ -34,7 +34,7 @@ struct SchoolGradesView: View {
             if model.snapshot?.errors["grade_categories"] != nil {
                 Label("Nie udało się pobrać rodzajów prac. Oceny są nadal dostępne.",
                       systemImage: "exclamationmark.triangle")
-                    .font(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 24)
+                    .schoolFont(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 24)
             }
             if grades.recent.isEmpty { emptyResults }
             else {
@@ -56,9 +56,9 @@ struct SchoolGradesView: View {
             HStack {
                 Picker("Widok ocen", selection: $browser.mode) {
                     ForEach(SchoolGradeMode.allCases) { mode in Text(mode.title).tag(mode) }
-                }.pickerStyle(.segmented).frame(width: 260)
+                }.pickerStyle(.segmented).frame(width: 260 * appearance.textSize.scale)
                 Spacer()
-                Text("Oceny: \(grades.recent.count)").font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+                Text("Oceny: \(grades.recent.count)").schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
             }
             HStack(spacing: 14) {
                 Picker("Semestr", selection: $browser.semester) {
@@ -76,7 +76,7 @@ struct SchoolGradesView: View {
                     if grades.hasUnknownCategory { Text("Brak rodzaju").tag(SchoolGradeCategory.unknown) }
                 }.frame(maxWidth: 290)
                 Spacer(minLength: 0)
-                if hasFilters { Button("Wyczyść filtry", action: clearFilters).font(.caption) }
+                if hasFilters { Button("Wyczyść filtry", action: clearFilters).schoolFont(.caption1) }
             }
         }.tint(SchoolPalette.accent)
     }
@@ -95,7 +95,7 @@ struct SchoolGradesView: View {
 
     private func averageLabel(_ average: SchoolGradeAverage) -> some View {
         Text("Średnia procentowa: \(average.displayValue)")
-            .font(.callout).fontWeight(.medium).monospacedDigit()
+            .schoolFont(.callout).fontWeight(.medium).monospacedDigit()
             .foregroundStyle(SchoolPalette.accent).help(average.explanation)
     }
 
@@ -105,18 +105,18 @@ struct SchoolGradesView: View {
             Button { browser.toggle(subject) } label: {
                 HStack(spacing: 12) {
                     Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                        .font(.caption).frame(width: 12).foregroundStyle(SchoolPalette.accent)
+                        .schoolFont(.caption1).frame(width: 12).foregroundStyle(SchoolPalette.accent)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(subject.title).font(.headline)
+                        Text(subject.title).schoolFont(.headline)
                         Text("Liczba ocen: \(subject.items.count)")
-                            .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                            .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
                         averageLabel(subject.average)
                     }
                     Spacer()
                     if let latest = subject.items.first {
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text(latest.value).font(.headline).foregroundStyle(SchoolPalette.accent)
-                            Text(SchoolDates.display(latest.date)).font(.caption)
+                            Text(latest.value).schoolFont(.headline).foregroundStyle(SchoolPalette.accent)
+                            Text(SchoolDates.display(latest.date)).schoolFont(.caption1)
                                 .foregroundStyle(SchoolPalette.secondaryText)
                         }
                     }

@@ -29,14 +29,15 @@ struct DesktopRootView: View {
 
 struct SchoolLoginView: View {
     @ObservedObject var model: SchoolViewModel
+    @EnvironmentObject private var appearance: SchoolAppearance
     @StateObject private var form = DesktopLoginForm()
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Image(systemName: "graduationcap.fill").font(.system(size: 44)).foregroundStyle(SchoolPalette.accent)
-            Text(AppIdentity.name).font(.largeTitle).fontWeight(.semibold)
+            Text(AppIdentity.name).schoolFont(.largeTitle).fontWeight(.semibold)
             Text(AppIdentity.tagline)
                 .foregroundStyle(SchoolPalette.secondaryText)
-            Text(AppIdentity.affiliation).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+            Text(AppIdentity.affiliation).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             VStack(alignment: .leading, spacing: 12) {
                 TextField("Numeryczny login rodzica", text: $form.login)
                 SecureField("Hasło do Synergii", text: $form.password).onSubmit(login)
@@ -48,11 +49,11 @@ struct SchoolLoginView: View {
             .buttonStyle(.borderedProminent).tint(SchoolPalette.accent).keyboardShortcut(.defaultAction)
             .disabled(model.busy || !LoginInput.isValid(login: form.login, password: form.password))
             if let error = model.errorMessage {
-                Text(error).font(.callout).foregroundStyle(SchoolPalette.warning)
+                Text(error).schoolFont(.callout).foregroundStyle(SchoolPalette.warning)
             }
             Text("Hasło i sesja zostaną zapisane w Pęku kluczy na tym Macu. Dane offline są szyfrowane.")
-                .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
-        }.frame(maxWidth: 400).padding(40)
+                .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
+        }.frame(maxWidth: 400 * appearance.textSize.scale).padding(40)
     }
     private func login() {
         guard LoginInput.isValid(login: form.login, password: form.password) else { return }
@@ -63,8 +64,6 @@ struct SchoolLoginView: View {
 }
 
 struct SchoolDashboard: View {
-    private static let eventStatusRefreshInterval: TimeInterval = 60
-
     @ObservedObject var model: SchoolViewModel
     @EnvironmentObject private var appearance: SchoolAppearance
     var body: some View {
@@ -75,16 +74,16 @@ struct SchoolDashboard: View {
                 heading
                 if let error = model.errorMessage {
                     Label(error, systemImage: "exclamationmark.circle")
-                        .font(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 28).padding(.bottom, 12)
+                        .schoolFont(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 28).padding(.bottom, 12)
                 }
                 if [.today, .news, .organizer].contains(model.selectedSection), !relevantFailures.isEmpty {
                     Label("Nie udało się odświeżyć: \(relevantFailures.map(\.title).joined(separator: ", ")). Dane mogą być nieaktualne.",
                           systemImage: "exclamationmark.triangle")
-                        .font(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 24).padding(.bottom, 12)
+                        .schoolFont(.callout).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 24).padding(.bottom, 12)
                 } else if let code = model.snapshot?.errors[model.selectedSection.rawValue]
                     ?? (model.selectedSection == .timetable ? model.snapshot?.errors["references"] : nil) {
                     Text("Pokazuję ostatnie dostępne dane. \(ProbeCopy.error(code))")
-                        .font(.caption).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 28)
+                        .schoolFont(.caption1).foregroundStyle(SchoolPalette.warning).padding(.horizontal, 28)
                 }
                 if model.selectedSection == .today { SchoolTodayView(model: model) }
                 else if model.selectedSection == .news { SchoolNewsView(model: model) }
@@ -92,6 +91,7 @@ struct SchoolDashboard: View {
                 else if model.selectedSection == .timetable { SchoolTimetableView(model: model) }
                 else if model.selectedSection == .grades { SchoolGradesView(model: model) }
                 else if model.selectedSection == .messages { SchoolMessagesView(model: model) }
+                else if model.selectedSection == .agenda { SchoolAgendaView(model: model) }
                 else { records }
                 footer
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -109,8 +109,8 @@ struct SchoolDashboard: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label(AppIdentity.name, systemImage: "graduationcap.fill")
-                .font(.title2).fontWeight(.semibold).foregroundStyle(SchoolPalette.accent).padding(.bottom, 8)
-            Text(AppIdentity.tagline).font(.caption2).foregroundStyle(SchoolPalette.secondaryText)
+                .schoolFont(.title2).fontWeight(.semibold).foregroundStyle(SchoolPalette.accent).padding(.bottom, 8)
+            Text(AppIdentity.tagline).schoolFont(.caption2).foregroundStyle(SchoolPalette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true).padding(.bottom, 8)
             ForEach(SchoolSection.allCases) { section in
                 Button {
@@ -121,15 +121,15 @@ struct SchoolDashboard: View {
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: section.icon).frame(width: 20)
-                        Text(section.title)
+                        Text(section.title).fixedSize(horizontal: true, vertical: false)
                         Spacer()
                         let count = section == .messages ? model.unreadCount : section == .news ? model.news.count : 0
                         if count > 0 {
-                            Text("\(count)").font(.caption).fontWeight(.semibold)
+                            Text("\(count)").schoolFont(.caption1).fontWeight(.semibold)
                                 .padding(.horizontal, 7).padding(.vertical, 2)
                                 .background(SchoolPalette.selection, in: Capsule())
                         }
-                    }.font(.callout).padding(.horizontal, 12).padding(.vertical, 9)
+                    }.schoolFont(.callout).padding(.horizontal, 12).padding(.vertical, 9)
                         .background(model.selectedSection == section ? SchoolPalette.selection : .clear,
                                     in: RoundedRectangle(cornerRadius: 9))
                         .foregroundStyle(model.selectedSection == section ? SchoolPalette.accent : SchoolPalette.primaryText)
@@ -141,14 +141,14 @@ struct SchoolDashboard: View {
                 Label("Ustawienia", systemImage: "gearshape").frame(maxWidth: .infinity, alignment: .leading)
                     .padding(10)
             }.buttonStyle(.plain).keyboardShortcut(",", modifiers: .command)
-        }.padding(16).frame(width: 200).background(SchoolPalette.sidebar)
+        }.padding(16).frame(width: 220 * appearance.textSize.scale).background(SchoolPalette.sidebar)
     }
 
     private var heading: some View {
         HStack {
             VStack(alignment: .leading, spacing: 6) {
-                Text(model.selectedSection.title).font(.title).fontWeight(.semibold)
-                Text(model.snapshot?.studentName ?? "Uczeń").font(.callout).foregroundStyle(SchoolPalette.secondaryText)
+                Text(model.selectedSection.title).schoolFont(.title1).fontWeight(.semibold)
+                Text(model.snapshot?.studentName ?? "Uczeń").schoolFont(.callout).foregroundStyle(SchoolPalette.secondaryText)
             }
             Spacer()
             if model.busy {
@@ -174,18 +174,6 @@ struct SchoolDashboard: View {
     }
 
     private var records: some View {
-        Group {
-            if model.selectedSection == .agenda {
-                TimelineView(.periodic(from: .now, by: Self.eventStatusRefreshInterval)) { context in
-                    recordList(now: context.date)
-                }
-            } else {
-                recordList(now: .distantPast)
-            }
-        }
-    }
-
-    private func recordList(now: Date) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: appearance.density.rowSpacing) {
                 if filtered.isEmpty {
@@ -195,7 +183,6 @@ struct SchoolDashboard: View {
                 }
                 ForEach(filtered) { item in
                     SchoolRecordRow(item: item, showDate: true,
-                        isPast: model.selectedSection == .agenda && SchoolDates.isPastEvent(item, now: now),
                         isNew: model.news.contains { $0.section == model.selectedSection && $0.key == SchoolNews.key(item, in: model.selectedSection) }) {
                         model.openItem(item, in: model.selectedSection)
                     }.disabled(model.busy && model.selectedSection == .messages)
@@ -213,7 +200,7 @@ struct SchoolDashboard: View {
             if let next = model.nextRefreshAt, !model.busy {
                 Text("Następne odświeżenie: \(next, style: .time)")
             }
-        }.font(.caption).foregroundStyle(SchoolPalette.secondaryText).padding(16)
+        }.schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText).padding(16)
     }
 }
 
@@ -230,7 +217,7 @@ struct SchoolNotificationControls: View {
                 Button("Test powiadomienia") { Task { await notifications.sendTest() } }
             }
             if let message = notifications.message { Text(message).fixedSize(horizontal: false, vertical: true) }
-        }.buttonStyle(.plain).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+        }.buttonStyle(.plain).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
     }
 }
 
@@ -243,66 +230,73 @@ struct SchoolRecordRow: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 if !item.value.isEmpty {
-                    Text(item.value).font(appearance.density == .compact ? .headline : .title3).fontWeight(.semibold)
+                    Text(item.value).schoolFont(appearance.density == .compact ? .headline : .title3).fontWeight(.semibold)
                         .foregroundStyle(item.canceled ? SchoolPalette.secondaryText : SchoolPalette.accent)
                         .frame(minWidth: 58).padding(appearance.density.rowPadding)
                         .background(SchoolPalette.raised, in: RoundedRectangle(cornerRadius: 12))
-                } else if !item.time.isEmpty {
-                    Text(item.time).font(.system(.callout, design: .monospaced))
-                        .foregroundStyle(SchoolPalette.secondaryText).frame(width: 88)
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        if item.unread { Circle().fill(SchoolPalette.accent).frame(width: 6, height: 6) }
-                        Text(item.title).fontWeight(item.unread || isNew ? .semibold : .medium)
-                            .foregroundStyle(isPast ? SchoolPalette.secondaryText : SchoolPalette.primaryText)
-                            .strikethrough(item.canceled)
-                        if isNew { Text("Nowe").font(.caption2).foregroundStyle(SchoolPalette.accent) }
-                        if isPast {
-                            Text("Minione").font(.caption2).foregroundStyle(SchoolPalette.secondaryText)
-                                .padding(.horizontal, 7).padding(.vertical, 2)
-                                .background(SchoolPalette.surface, in: Capsule())
-                        }
-                    }
-                    if !item.subtitle.isEmpty { Text(item.subtitle).font(.callout).foregroundStyle(SchoolPalette.secondaryText) }
-                    if !item.body.isEmpty { Text(item.body).lineLimit(appearance.density.bodyLines).font(.callout).foregroundStyle(SchoolPalette.secondaryText) }
-                }
+                recordContent
                 Spacer(minLength: 10)
-                if showDate {
-                    Text(SchoolDates.display(item.date)).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
-                        .frame(width: 92, alignment: .trailing)
-                }
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                Image(systemName: "chevron.right").schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             }.padding(appearance.density.rowPadding).frame(maxWidth: .infinity, alignment: .leading)
                 .background(isPast ? SchoolPalette.raised : SchoolPalette.surface,
                             in: RoundedRectangle(cornerRadius: 14))
         }.buttonStyle(.plain)
     }
+
+    private var recordContent: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                if item.unread { Circle().fill(SchoolPalette.accent).frame(width: 6, height: 6) }
+                Text(item.title).fontWeight(item.unread || isNew ? .semibold : .medium)
+                    .foregroundStyle(isPast ? SchoolPalette.secondaryText : SchoolPalette.primaryText)
+                    .strikethrough(item.canceled).fixedSize(horizontal: false, vertical: true)
+            }
+            if !item.subtitle.isEmpty { Text(item.subtitle).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText) }
+            if !item.body.isEmpty {
+                Text(item.body).lineLimit(appearance.density.bodyLines).schoolFont(.callout)
+                    .foregroundStyle(isPast ? SchoolPalette.secondaryText : SchoolPalette.primaryText)
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) { metadata }
+                VStack(alignment: .leading, spacing: 6) { metadata }
+            }.schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
+        }
+    }
+
+    @ViewBuilder
+    private var metadata: some View {
+        if showDate { Label(SchoolDates.display(item.date), systemImage: "calendar") }
+        if !item.time.isEmpty { Text(item.time).monospacedDigit() }
+        if isNew { Text("Nowe").foregroundStyle(SchoolPalette.accent) }
+        if isPast { Text("Minione").fontWeight(.medium) }
+    }
 }
 
 struct SchoolDetailView: View {
     @ObservedObject var model: SchoolViewModel
+    @EnvironmentObject private var appearance: SchoolAppearance
     let original: SchoolItem
     private var item: SchoolItem { model.selectedItem ?? original }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(item.title).font(.title2).fontWeight(.semibold)
+                    Text(item.title).schoolFont(.title2).fontWeight(.semibold)
                     Text(item.subtitle).foregroundStyle(SchoolPalette.secondaryText)
-                    Text(SchoolDates.display(item.date)).font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                    Text(SchoolDates.display(item.date)).schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
                 }
                 Spacer()
-                if !item.value.isEmpty { Text(item.value).font(.largeTitle).foregroundStyle(SchoolPalette.accent) }
+                if !item.value.isEmpty { Text(item.value).schoolFont(.largeTitle).foregroundStyle(SchoolPalette.accent) }
                 Button { model.selectedItem = nil } label: { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.plain).foregroundStyle(SchoolPalette.secondaryText)
             }
             Divider()
             if model.detailSourceArchived {
                 Label("Zapisana kopia źródła. Wpis nie jest dostępny w bieżących danych.", systemImage: "archivebox")
-                    .font(.caption).foregroundStyle(SchoolPalette.secondaryText)
+                    .schoolFont(.caption1).foregroundStyle(SchoolPalette.secondaryText)
             }
             if let section = model.detailSection, [.agenda, .homework].contains(section) {
                 SchoolTaskAddButton(model: model, item: item, section: section)
@@ -323,8 +317,8 @@ struct SchoolDetailView: View {
                     Label(attachment.name, systemImage: "arrow.down.doc")
                 }.disabled(model.busy || !model.signedIn || model.detailSourceArchived)
             }
-            if let error = model.errorMessage { Text(error).font(.caption).foregroundStyle(SchoolPalette.warning) }
-        }.padding(30).frame(width: 700, height: 560)
+            if let error = model.errorMessage { Text(error).schoolFont(.caption1).foregroundStyle(SchoolPalette.warning) }
+        }.padding(30).frame(width: 700 * appearance.textSize.scale, height: 560)
     }
 }
 
