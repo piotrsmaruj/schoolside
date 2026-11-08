@@ -63,6 +63,8 @@ struct SchoolLoginView: View {
 }
 
 struct SchoolDashboard: View {
+    private static let eventStatusRefreshInterval: TimeInterval = 60
+
     @ObservedObject var model: SchoolViewModel
     @EnvironmentObject private var appearance: SchoolAppearance
     var body: some View {
@@ -172,6 +174,18 @@ struct SchoolDashboard: View {
     }
 
     private var records: some View {
+        Group {
+            if model.selectedSection == .agenda {
+                TimelineView(.periodic(from: .now, by: Self.eventStatusRefreshInterval)) { context in
+                    recordList(now: context.date)
+                }
+            } else {
+                recordList(now: .distantPast)
+            }
+        }
+    }
+
+    private func recordList(now: Date) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: appearance.density.rowSpacing) {
                 if filtered.isEmpty {
@@ -181,6 +195,7 @@ struct SchoolDashboard: View {
                 }
                 ForEach(filtered) { item in
                     SchoolRecordRow(item: item, showDate: true,
+                        isPast: model.selectedSection == .agenda && SchoolDates.isPastEvent(item, now: now),
                         isNew: model.news.contains { $0.section == model.selectedSection && $0.key == SchoolNews.key(item, in: model.selectedSection) }) {
                         model.openItem(item, in: model.selectedSection)
                     }.disabled(model.busy && model.selectedSection == .messages)
@@ -223,6 +238,7 @@ struct SchoolRecordRow: View {
     @EnvironmentObject private var appearance: SchoolAppearance
     let item: SchoolItem
     var showDate = false
+    var isPast = false
     var isNew = false
     let action: () -> Void
     var body: some View {
@@ -241,8 +257,14 @@ struct SchoolRecordRow: View {
                     HStack {
                         if item.unread { Circle().fill(SchoolPalette.accent).frame(width: 6, height: 6) }
                         Text(item.title).fontWeight(item.unread || isNew ? .semibold : .medium)
+                            .foregroundStyle(isPast ? SchoolPalette.secondaryText : SchoolPalette.primaryText)
                             .strikethrough(item.canceled)
                         if isNew { Text("Nowe").font(.caption2).foregroundStyle(SchoolPalette.accent) }
+                        if isPast {
+                            Text("Minione").font(.caption2).foregroundStyle(SchoolPalette.secondaryText)
+                                .padding(.horizontal, 7).padding(.vertical, 2)
+                                .background(SchoolPalette.surface, in: Capsule())
+                        }
                     }
                     if !item.subtitle.isEmpty { Text(item.subtitle).font(.callout).foregroundStyle(SchoolPalette.secondaryText) }
                     if !item.body.isEmpty { Text(item.body).lineLimit(appearance.density.bodyLines).font(.callout).foregroundStyle(SchoolPalette.secondaryText) }
@@ -254,7 +276,8 @@ struct SchoolRecordRow: View {
                 }
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(SchoolPalette.secondaryText)
             }.padding(appearance.density.rowPadding).frame(maxWidth: .infinity, alignment: .leading)
-                .background(SchoolPalette.surface, in: RoundedRectangle(cornerRadius: 14))
+                .background(isPast ? SchoolPalette.raised : SchoolPalette.surface,
+                            in: RoundedRectangle(cornerRadius: 14))
         }.buttonStyle(.plain)
     }
 }

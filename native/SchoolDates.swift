@@ -48,6 +48,14 @@ enum SchoolDates {
         return calendar.date(bySettingHour: hour, minute: minute, second: second, of: date)
     }
 
+    static func isPastEvent(_ item: SchoolItem, now: Date) -> Bool {
+        guard let eventDay = parseDay(item.date) else { return false }
+        let today = calendar.startOfDay(for: now)
+        if eventDay < today { return true }
+        guard eventDay == today, let eventStart = time(item.time, on: item.date) else { return false }
+        return eventStart < now
+    }
+
     static func lessonBounds(_ item: SchoolItem) -> DateInterval? {
         let parts = item.time.replacingOccurrences(of: "-", with: "–").split(separator: "–")
         guard parts.count == 2,

@@ -8,6 +8,7 @@ struct DayOverviewTests {
         currentAndNextLesson()
         tomorrowAndMidnight()
         eventsAndHomework()
+        agendaEventsBecomePastAfterTheirStart()
         invalidTimes()
         failedModulesAreNotEmptyDays()
         print("Swift day: current/next lesson, cancellation, tomorrow, Warsaw midnight, events and homework passed")
@@ -58,6 +59,23 @@ struct DayOverviewTests {
         assert(day.events.map(\.id) == ["early", "late"], "Events must sort by both day and time")
         assert(day.homework.map(\.id) == ["due"], "The preview contains homework due tomorrow")
         assert(day.currentLesson == nil && day.nextLesson == nil && day.endTime == nil)
+    }
+
+    static func agendaEventsBecomePastAfterTheirStart() {
+        let now = ISO8601DateFormatter().date(from: "2026-10-24T08:30:00Z")!
+
+        let previousDay = SchoolItem(id: "previous-day", title: "Wczoraj", date: "2026-10-23")
+        let earlierToday = SchoolItem(id: "earlier-today", title: "Rano", date: "2026-10-24", time: "08:00:00")
+        let laterToday = SchoolItem(id: "later-today", title: "Później", date: "2026-10-24", time: "11:00:00")
+        let allDay = SchoolItem(id: "all-day", title: "Cały dzień", date: "2026-10-24")
+        let future = SchoolItem(id: "future", title: "Jutro", date: "2026-10-25", time: "08:00:00")
+
+        assert(SchoolDates.isPastEvent(previousDay, now: now))
+        assert(SchoolDates.isPastEvent(earlierToday, now: now))
+        assert(!SchoolDates.isPastEvent(laterToday, now: now))
+        assert(!SchoolDates.isPastEvent(allDay, now: now))
+        assert(!SchoolDates.isPastEvent(future, now: now))
+        assert(!SchoolDates.isPastEvent(SchoolItem(id: "invalid", title: "Bez daty", date: "invalid"), now: now))
     }
 
     static func invalidTimes() {
